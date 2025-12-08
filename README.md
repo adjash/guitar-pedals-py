@@ -18,7 +18,7 @@ A real-time guitar effects processor written in Python. This app allows you to a
 ### 1. Clone the Repository
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/adjash/guitar-pedals-py.git
 cd guitar-pedals
 ```
 
