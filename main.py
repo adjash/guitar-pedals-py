@@ -1,14 +1,14 @@
 import sounddevice as sd
 import time
 from config import SAMPLE_RATE, BUFFER_SIZE, INPUT_DEVICE, OUTPUT_DEVICE
-from effects import Clean, GainBoost, LowPassFilter, Distortion, Echo, WahWah, UltraMetal
+from effects import Clean, GainBoost, LowPassFilter, Distortion, Echo, WahWah, UltraMetal, EffectChain
 from cli import Menu
 
 class GuitarFX:
     def __init__(self):
         self.running = True
         
-        # Initialize effects
+        # Initialize individual effects
         self.effects = [
             Clean(SAMPLE_RATE),
             GainBoost(SAMPLE_RATE),
@@ -16,11 +16,16 @@ class GuitarFX:
             Distortion(SAMPLE_RATE),
             Echo(SAMPLE_RATE),
             WahWah(SAMPLE_RATE),
-            UltraMetal(SAMPLE_RATE)
+            UltraMetal(SAMPLE_RATE),
         ]
         
+        # Initialize effect chain with all effects
+        self.effect_chain = EffectChain(SAMPLE_RATE)
+        for effect in self.effects:
+            self.effect_chain.add_effect(effect, active=False)
+        
         # Initialize menu
-        self.menu = Menu(self.effects, self.stop)
+        self.menu = Menu(self.effects, self.effect_chain, self.stop)
     
     def audio_callback(self, indata, outdata, frames, time_data, status):
         audio = indata[:, 0]
@@ -32,7 +37,7 @@ class GuitarFX:
         self.running = False
     
     def run(self):
-        print("Starting guitar pedals")
+        print("Starting real-time guitar FX…")
         
         # Start menu in separate thread
         self.menu.start_thread()
