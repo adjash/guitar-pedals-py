@@ -4,48 +4,47 @@ from .base import Effect
 class UltraMetal(Effect):
     def __init__(self, sample_rate):
         super().__init__(sample_rate)
-        # Pre-gain stage
-        self.pre_gain = 40.0  # Heavy pre-distortion boost
         
-        # Multi-stage clipping
-        self.clip_stages = 3
+        # --- GAIN STAGE PARAMETERS ---
+        self.pre_gain = 80.0      # Increased input boost for max saturation
+        self.drive = 0.6          # Increased clipping intensity
+        self.post_level = 0.6     
         
-        # Mid-range boost (helps pinch harmonics cut through)
-        self.mid_freq = 2000  # Hz - where pinch harmonics live
-        self.mid_boost = 4.0
-        self.mid_q = 3.0
+        # --- NEW PRE-CLIPPING EQ (Pinch Harmonic Focus) ---
+        self.pre_mid_freq = 2500  # Critical frequency where harmonic energy sits
+        self.pre_mid_boost = 3.5  # Focused boost
+        self.pre_mid_q = 8.0      # Very high Q for a narrow, piercing emphasis
         
-        # High-pass to tighten low end
-        self.hp_freq = 100
+        # --- POST-CLIPPING EQ (Metal V-Scoop) ---
         
-        # Presence boost (high-mid emphasis)
-        self.presence_freq = 4000
-        self.presence_boost = 2.5
-        self.presence_q = 2.0
+        # Low-End (Bass)
+        self.bass_freq = 100
+        self.bass_gain = 0.5      
+        
+        # Mid-Scoop (The Metal V)
+        self.mid_freq = 750       
+        self.mid_gain = 0.25      
+        self.mid_q = 1.0          
+        
+        # High-End (Presence/Treble)
+        self.high_freq = 4000     # Pushed higher for more sizzle
+        self.high_gain = 5.0      # Even more aggressive boost
+        self.high_q = 2.0         # Sharper Q
         
     def reset(self):
-        # Biquad filter states for mid boost
-        self.mid_x1 = 0.0
-        self.mid_x2 = 0.0
-        self.mid_y1 = 0.0
-        self.mid_y2 = 0.0
-        
-        # High-pass filter state
-        self.hp_x1 = 0.0
-        self.hp_y1 = 0.0
-        
-        # Presence boost filter states
-        self.pres_x1 = 0.0
-        self.pres_x2 = 0.0
-        self.pres_y1 = 0.0
-        self.pres_y2 = 0.0
+        # Filter states for Pre-Mid
+        self.pre_mid_x1, self.pre_mid_x2, self.pre_mid_y1, self.pre_mid_y2 = 0.0, 0.0, 0.0, 0.0
+        # Filter states for Post-EQ (Bass, Mid, High)
+        self.bass_x1, self.bass_x2, self.bass_y1, self.bass_y2 = 0.0, 0.0, 0.0, 0.0
+        self.mid_x1, self.mid_x2, self.mid_y1, self.mid_y2 = 0.0, 0.0, 0.0, 0.0
+        self.high_x1, self.high_x2, self.high_y1, self.high_y2 = 0.0, 0.0, 0.0, 0.0
     
     @property
     def name(self):
-        return "Ultra Metal"
+        return "Ultra Metal V3"
     
     def _peaking_eq(self, x, x1, x2, y1, y2, freq, gain, q):
-        """Peaking EQ biquad filter"""
+        """Biquad Peaking EQ filter (Formula Unchanged)"""
         w0 = 2 * np.pi * freq / self.sample_rate
         A = np.sqrt(gain)
         alpha = np.sin(w0) / (2 * q)
@@ -57,64 +56,64 @@ class UltraMetal(Effect):
         a1 = -2 * np.cos(w0)
         a2 = 1 - alpha / A
         
-        # Normalize
-        b0 /= a0
-        b1 /= a0
-        b2 /= a0
-        a1 /= a0
-        a2 /= a0
+        # Normalize by a0
+        b0_norm, b1_norm, b2_norm = b0 / a0, b1 / a0, b2 / a0
+        a1_norm, a2_norm = a1 / a0, a2 / a0
         
-        # Apply filter
-        y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2
+        y = b0_norm * x + b1_norm * x1 + b2_norm * x2 - a1_norm * y1 - a2_norm * y2
         
         return y, x, x1, y, y1
-    
-    def _highpass(self, x, x1, y1):
-        """Simple one-pole high-pass filter"""
-        alpha = 1.0 / (1.0 + self.sample_rate / (2 * np.pi * self.hp_freq))
-        y = alpha * (y1 + x - x1)
-        return y, x, y
-    
-    def _asymmetric_clip(self, x):
-        """Asymmetric clipping for more harmonics"""
-        if x > 0:
-            return np.tanh(x * 1.2)
-        else:
-            return np.tanh(x * 0.8)
-    
+        
+    def _harsh_sigmoid_clip(self, x, drive):
+        """NEW: Increased harshness for high-order harmonics."""
+        
+        # Increase the exponent of the drive to force harder clipping at the edges
+        z = np.tanh(x * (1.0 + 2 * drive))
+        
+        # INCREASED power term: This term significantly boosts high-order harmonics,
+        # which are the "scream" of the pinch harmonic.
+        return z + 0.5 * np.power(z, 5) 
+
     def process(self, audio, frames):
         out = np.empty_like(audio)
         
         for i in range(frames):
             sample = audio[i]
             
-            # Stage 1: High-pass filter (tighten bass)
-            sample, self.hp_x1, self.hp_y1 = self._highpass(
-                sample, self.hp_x1, self.hp_y1
-            )
-            
-            # Stage 2: Mid-range boost (pinch harmonic emphasis)
-            sample, self.mid_x2, self.mid_x1, self.mid_y2, self.mid_y1 = self._peaking_eq(
-                sample, self.mid_x1, self.mid_x2, self.mid_y1, self.mid_y2,
-                self.mid_freq, self.mid_boost, self.mid_q
-            )
-            
-            # Stage 3: Heavy pre-gain
+            # 1. Pre-Gain Stage
             sample *= self.pre_gain
             
-            # Stage 4: Multi-stage asymmetric clipping
-            for _ in range(self.clip_stages):
-                sample = self._asymmetric_clip(sample)
-            
-            # Stage 5: Presence boost (sparkle and cut)
-            sample, self.pres_x2, self.pres_x1, self.pres_y2, self.pres_y1 = self._peaking_eq(
-                sample, self.pres_x1, self.pres_x2, self.pres_y1, self.pres_y2,
-                self.presence_freq, self.presence_boost, self.presence_q
+            # 2. NEW PRE-CLIPPING EQ: Focus the pinch harmonic frequencies
+            # This aggressive, narrow boost ensures the harmonic partials saturate first.
+            sample, self.pre_mid_x2, self.pre_mid_x1, self.pre_mid_y2, self.pre_mid_y1 = self._peaking_eq(
+                sample, self.pre_mid_x1, self.pre_mid_x2, self.pre_mid_y1, self.pre_mid_y2,
+                self.pre_mid_freq, self.pre_mid_boost, self.pre_mid_q
             )
             
-            # Stage 6: Final soft clipping to control peaks
-            sample = np.tanh(sample * 0.7)
+            # 3. Clipping/Saturation: Use the harsher clipper
+            sample = self._harsh_sigmoid_clip(sample, self.drive)
             
-            out[i] = sample
+            # --- POST-CLIPPING EQ ---
+            
+            # 4. Bass EQ: Tighten the low end
+            sample, self.bass_x2, self.bass_x1, self.bass_y2, self.bass_y1 = self._peaking_eq(
+                sample, self.bass_x1, self.bass_x2, self.bass_y1, self.bass_y2,
+                self.bass_freq, self.bass_gain, 1.0
+            )
+
+            # 5. Mid EQ: The classic mid-scoop
+            sample, self.mid_x2, self.mid_x1, self.mid_y2, self.mid_y1 = self._peaking_eq(
+                sample, self.mid_x1, self.mid_x2, self.mid_y1, self.mid_y2,
+                self.mid_freq, self.mid_gain, self.mid_q
+            )
+            
+            # 6. High EQ: Final aggressive high-end boost
+            sample, self.high_x2, self.high_x1, self.high_y2, self.high_y1 = self._peaking_eq(
+                sample, self.high_x1, self.high_x2, self.high_y1, self.high_y2,
+                self.high_freq, self.high_gain, self.high_q
+            )
+            
+            # 7. Output Level control
+            out[i] = sample * self.post_level
         
-        return out  # Output scaling
+        return out
