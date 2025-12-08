@@ -1,7 +1,7 @@
 import sounddevice as sd
 import time
 from config import SAMPLE_RATE, BUFFER_SIZE, INPUT_DEVICE, OUTPUT_DEVICE
-from effects import Clean, GainBoost, LowPassFilter, Distortion, Echo
+from effects import Clean, GainBoost, LowPassFilter, Distortion, Echo, WahWah, UltraMetal
 from cli import Menu
 
 class GuitarFX:
@@ -15,6 +15,8 @@ class GuitarFX:
             LowPassFilter(SAMPLE_RATE),
             Distortion(SAMPLE_RATE),
             Echo(SAMPLE_RATE),
+            WahWah(SAMPLE_RATE),
+            UltraMetal(SAMPLE_RATE)
         ]
         
         # Initialize menu
