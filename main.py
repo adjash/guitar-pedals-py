@@ -38,7 +38,8 @@ class GuitarFX:
     
     def run(self):
         print("Starting real-time guitar FX…")
-        
+
+        print(sd.query_devices())
         # Start menu in separate thread
         self.menu.start_thread()
         

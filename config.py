@@ -3,6 +3,7 @@ SAMPLE_RATE = 48000
 BUFFER_SIZE = 128
 #input/output might change depending on the audio seutp
 #focusrite seems to be 0/0 on my mac
+#printing this will show you the devices available print(sd.query_devices())
 INPUT_DEVICE = 0
 OUTPUT_DEVICE = 0
 
