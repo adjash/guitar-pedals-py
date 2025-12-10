@@ -9,5 +9,6 @@ from .effect_chain import EffectChain
 from .tremolo import Tremolo
 from .flanger import Flanger
 from .reverb import Reverb
+from .looper import Looper
 
-__all__ = ['Clean', 'GainBoost', 'LowPassFilter', 'Distortion', 'Echo', 'WahWah', 'UltraMetal', 'EffectChain', 'Tremolo', 'Flanger', 'Reverb']
+__all__ = ['Clean', 'GainBoost', 'LowPassFilter', 'Distortion', 'Echo', 'WahWah', 'UltraMetal', 'EffectChain', 'Tremolo', 'Flanger', 'Reverb', 'Looper']
