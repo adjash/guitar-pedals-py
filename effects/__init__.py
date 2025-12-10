@@ -6,5 +6,8 @@ from .echo import Echo
 from .wahwah import WahWah
 from .ultra_metal import UltraMetal
 from .effect_chain import EffectChain
+from .tremolo import Tremolo
+from .flanger import Flanger
+from .reverb import Reverb
 
-__all__ = ['Clean', 'GainBoost', 'LowPassFilter', 'Distortion', 'Echo', 'WahWah', 'UltraMetal', 'EffectChain']
+__all__ = ['Clean', 'GainBoost', 'LowPassFilter', 'Distortion', 'Echo', 'WahWah', 'UltraMetal', 'EffectChain', 'Tremolo', 'Flanger', 'Reverb']
