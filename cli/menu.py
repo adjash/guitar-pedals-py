@@ -30,22 +30,21 @@ class Menu:
                 marker = "→" if i-1 == self.current_effect_idx else " "
                 print(f"  {marker} {i}. {effect.name}")
             print("\nCommands:")
-            print("  1-9  : Select effect")
-            print("  c    : Switch to Chain Mode")
+            print("  1-9    : Select effect")
+            print("  c      : Switch to Chain Mode")
         else:
             print("\n[CHAIN MODE - Multiple Effects]")
             print("\nEffect Chain:")
             print(self.effect_chain.get_status_display())
             print("\nCommands:")
-            print("  1-9  : Toggle effect on/off")
-            print("  s    : Switch to Single Mode")
-            print("  r    : Reset all effects")
+            print("  1-9    : Toggle effect on/off")
+            print("  s      : Switch to Single Mode")
+            print("  r      : Reset all effects")
         
         print("\nLooper Controls:")
-        print("  L    : Start recording loop")
-        print("  l    : Stop recording / Toggle playback")
-        print("  x    : Clear loop")
-        print("  q    : Quit")
+        print("  SPACE  : Toggle recording/playback (just press Enter)")
+        print("  x      : Clear loop")
+        print("  q      : Quit")
         print("="*50)
     
     def run(self):
@@ -88,17 +87,20 @@ class Menu:
                 self.effect_chain.reset()
                 print("\n✓ All effects reset")
             
-            # Looper controls
-            elif choice == "L":
-                msg = self.looper.start_recording()
-                print(f"\n♪ {msg}")
-            
-            elif choice == "l":
-                if self.looper.is_recording:
+            # Looper controls - SPACEBAR (empty string = just pressing Enter)
+            elif choice == "":
+                # Empty input = spacebar/enter pressed
+                if not self.looper.is_recording and self.looper.loop_length == 0:
+                    # Start recording if no loop exists
+                    msg = self.looper.start_recording()
+                    print(f"\n♪ {msg}")
+                elif self.looper.is_recording:
+                    # Stop recording and start playback
                     msg = self.looper.stop_recording()
                     self.display_menu()
                     print(f"\n♪ {msg}")
                 else:
+                    # Toggle playback if loop exists
                     msg = self.looper.toggle_playback()
                     print(f"\n♪ {msg}")
             
