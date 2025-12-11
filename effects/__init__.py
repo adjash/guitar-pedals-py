@@ -10,5 +10,7 @@ from .tremolo import Tremolo
 from .flanger import Flanger
 from .reverb import Reverb
 from .looper import Looper
+from .pitch_bend import PitchBend
+from .learning_effects import LearningEffects
 
-__all__ = ['Clean', 'GainBoost', 'LowPassFilter', 'Distortion', 'Echo', 'WahWah', 'UltraMetal', 'EffectChain', 'Tremolo', 'Flanger', 'Reverb', 'Looper']
+__all__ = ['Clean', 'GainBoost', 'LowPassFilter', 'Distortion', 'Echo', 'WahWah', 'UltraMetal', 'EffectChain', 'Tremolo', 'Flanger', 'Reverb', 'Looper', 'PitchBend', 'LearningEffects']

@@ -1,13 +1,13 @@
 import sounddevice as sd
 import time
 from config import SAMPLE_RATE, BUFFER_SIZE, INPUT_DEVICE, OUTPUT_DEVICE
-from effects import Clean, GainBoost, LowPassFilter, Distortion, Echo, WahWah, UltraMetal, EffectChain, Looper, Tremolo, Flanger, Reverb
+from effects import Clean, GainBoost, LowPassFilter, Distortion, Echo, WahWah, UltraMetal, EffectChain, Looper, Tremolo, Flanger, Reverb, PitchBend, LearningEffects
 from cli import Menu
 
 class GuitarFX:
     def __init__(self):
         self.running = True
-        
+        print(sd.query_devices())
         # Initialize individual effects
         self.effects = [
             Clean(SAMPLE_RATE),
@@ -20,6 +20,8 @@ class GuitarFX:
             Tremolo(SAMPLE_RATE),
             Flanger(SAMPLE_RATE),
             Reverb(SAMPLE_RATE),
+            PitchBend(SAMPLE_RATE),
+            LearningEffects(SAMPLE_RATE)
         ]
         
         # Initialize effect chain with all effects
